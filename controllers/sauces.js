@@ -1,18 +1,19 @@
 const Sauce = require('../models/sauce')
 
 exports.createSauce = (req, res, next) => {
+    const url = req.protocol + '://' + req.get('host');
+    req.body.sauce = JSON.parse(req.body.sauce);
     const sauce = new Sauce({
-      _id: 'oeihffdfzeoi',
-      name: 'Jalapeno Holler',
-      manufacturer: 'Tierra Hot Sauce Brand',
-      description: 'Made from extra hot Jalapenos',
-      mainPepper: 'Jalapeno',
-      imageUrl: 'qsomihvqios',
-      heat: 6,
-      likes: 0,
-      dislikes: 0,
-      usersLiked: [],
-      usersDisliked: [],
+      name: req.body.sauce.name,
+      manufacturer: req.body.sauce.manufacturer,
+      description: req.body.sauce.description,
+      mainPepper: req.body.sauce.mainPepper,
+      imageUrl: url + '/images/' + req.file.filename,
+      heat: req.body.sauce.heat,
+      likes: req.body.sauce.likes,
+      dislikes: req.body.sauce.dislikes,
+      usersLiked: req.body.sauce.usersLiked,
+      usersDisliked: req.body.sauce.usersDisliked,
     });
     sauce.save().then(
       () => {
@@ -29,34 +30,81 @@ exports.createSauce = (req, res, next) => {
     );
   }
 
-exports.getAllSauces = (req, res, next) => {
-    const sauces = [
-      {
-        _id: 'oeihffdfzeoi',
-        name: 'Aji Panca',
-        manufacturer: 'Tierra Hot Sauce Brand',
-        description: 'Smokey, fruity, rich and mild hot sauce made from the Aji Panca chile of Peru.',
-        mainPepper: 'Aji Panca',
-        imageUrl: 'qsomihvqios',
-        heat: 2,
-        likes: 0,
-        dislikes: 0,
-        usersLiked: [],
-        usersDisliked: [],
-      },
-      {
-       _id: 'oeihfze4fd3oi',
-        name: 'Ancho Ghost',
-        manufacturer: 'Tierra Hot Sauce Brand',
-        description: '95% Ancho with 5% Ghost. Bright, powerful, flavorful, with a gorgeous red color.',
-        mainPepper: 'Ancho/Ghost',
-        imageUrl: 'qsomihvqios',
-        heat: 2,
-        likes: 0,
-        dislikes: 0,
-        usersLiked: [],
-        usersDisliked: [],
+
+
+exports.getOneSauce = (req, res, next) => {
+    Sauce.findOne({
+      _id: req.params.id
+    }).then(
+      (sauce) => {
+        res.status(200).json(sauce);
       }
-    ];
-    res.status(200).json(sauces);
+    ).catch(
+      (error) => {
+        res.status(404).json({
+          error: error
+        });
+      }
+    );
   }
+
+  exports.modifySauce = (req, res, next) => {
+    let sauce = new Sauce({ _id: req.params._id });
+    if (req.file) {
+      const url = req.protocol + '://' + req.get('host');
+      req.body.thing = JSON.parse(req.body.sauce);
+      sauce = {
+        name: req.body.sauce.name,
+        manufacturer: req.body.sauce.manufacturer,
+        description: req.body.sauce.description,
+        mainPepper: req.body.sauce.mainPepper,
+        imageUrl: url + '/images/' + req.file.filename,
+        heat: req.body.sauce.heat,
+        likes: req.body.sauce.likes,
+        dislikes: req.body.sauce.dislikes,
+        usersLiked: req.body.sauce.usersLiked,
+        usersDisliked: req.body.sauce.usersDisliked,
+      };
+    } else {
+        sauce = {
+            name: req.body.sauce.name,
+            manufacturer: req.body.sauce.manufacturer,
+            description: req.body.sauce.description,
+            mainPepper: req.body.sauce.mainPepper,
+            imageUrl: req.body.imageUrl,
+            heat: req.body.sauce.heat,
+            likes: req.body.sauce.likes,
+            dislikes: req.body.sauce.dislikes,
+            usersLiked: req.body.sauce.usersLiked,
+            usersDisliked: req.body.sauce.usersDisliked,
+      };
+    }
+    Thing.updateOne({_id: req.params.id}, thing).then(
+      () => {
+        res.status(201).json({
+          message: 'Sauce updated successfully!'
+        });
+      }
+    ).catch(
+      (error) => {
+        res.status(400).json({
+          error: error
+        });
+      }
+    );
+  };
+
+
+  exports.getAllSauces = (req, res, next) => {
+    Sauce.find().then(
+        (sauces) => {
+        res.status(200).json(sauces);
+        }
+    ).catch(
+        (error) => {
+        res.status(400).json({
+            error: error
+        });
+        }
+    );
+    }
