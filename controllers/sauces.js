@@ -31,7 +31,6 @@ exports.createSauce = (req, res, next) => {
   }
 
 
-
 exports.getOneSauce = (req, res, next) => {
     Sauce.findOne({
       _id: req.params.id
@@ -52,7 +51,7 @@ exports.getOneSauce = (req, res, next) => {
     let sauce = new Sauce({ _id: req.params._id });
     if (req.file) {
       const url = req.protocol + '://' + req.get('host');
-      req.body.thing = JSON.parse(req.body.sauce);
+      req.body.sauce = JSON.parse(req.body.sauce);
       sauce = {
         name: req.body.sauce.name,
         manufacturer: req.body.sauce.manufacturer,
@@ -79,7 +78,7 @@ exports.getOneSauce = (req, res, next) => {
             usersDisliked: req.body.sauce.usersDisliked,
       };
     }
-    Thing.updateOne({_id: req.params.id}, thing).then(
+    Sauce.updateOne({_id: req.params.id}, sauce).then(
       () => {
         res.status(201).json({
           message: 'Sauce updated successfully!'
@@ -108,3 +107,20 @@ exports.getOneSauce = (req, res, next) => {
         }
     );
     }
+
+
+exports.deleteSauce = (req, res, next) => {
+    Sauce.deleteOne({_id: req.params.id}).then(
+      () => {
+        res.status(200).json({
+          message: 'Deleted!'
+        });
+      }
+    ).catch(
+      (error) => {
+        res.status(400).json({
+          error: error
+        });
+      }
+    );
+  };
