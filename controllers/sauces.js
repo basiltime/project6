@@ -18,6 +18,7 @@ exports.createSauce = (req, res, next) => {
     });
     sauce.save().then(
       () => {
+        console.log(sauce)
         res.status(201).json({
           message: 'Post saved successfully!'
         });
@@ -54,33 +55,24 @@ exports.getOneSauce = (req, res, next) => {
       const url = req.protocol + '://' + req.get('host');
       req.body.sauce = JSON.parse(req.body.sauce);
       sauce = {
-        userId: req.body.sauce.userId,
         name: req.body.sauce.name,
         manufacturer: req.body.sauce.manufacturer,
         description: req.body.sauce.description,
         mainPepper: req.body.sauce.mainPepper,
         imageUrl: url + '/images/' + req.file.filename,
         heat: req.body.sauce.heat,
-        likes: req.body.sauce.likes,
-        dislikes: req.body.sauce.dislikes,
-        usersLiked: req.body.sauce.usersLiked,
-        usersDisliked: req.body.sauce.usersDisliked,
       };
+      
     } else {
         sauce = {
-          userId: req.body.userId,
           name: req.body.name,
           manufacturer: req.body.manufacturer,
           description: req.body.description,
           mainPepper: req.body.mainPepper,
-          imageUrl: req.body.imageUrl,
           heat: req.body.heat,
-          likes: req.body.likes,
-          dislikes: req.body.dislikes,
-          usersLiked: req.body.usersLiked,
-          usersDisliked: req.body.usersDisliked,
       };
-    }
+   }
+   console.log(req.body)
     Sauce.updateOne({_id: req.params.id}, sauce).then(
       () => {
         res.status(201).json({
