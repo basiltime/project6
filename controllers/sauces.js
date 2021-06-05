@@ -1,3 +1,4 @@
+const { populate } = require('../models/sauce');
 const Sauce = require('../models/sauce')
 
 exports.createSauce = (req, res, next) => {
@@ -18,7 +19,6 @@ exports.createSauce = (req, res, next) => {
     });
     sauce.save().then(
       () => {
-        console.log(sauce)
         res.status(201).json({
           message: 'Post saved successfully!'
         });
@@ -72,7 +72,6 @@ exports.getOneSauce = (req, res, next) => {
           heat: req.body.heat,
       };
    }
-   console.log(req.body)
     Sauce.updateOne({_id: req.params.id}, sauce).then(
       () => {
         res.status(201).json({
@@ -87,6 +86,51 @@ exports.getOneSauce = (req, res, next) => {
       }
     );
   };
+
+  exports.likeOrDislike = (req, res, next) => {
+    let sauce = new Sauce({ _id: req.body.userId });
+    
+    if (req.body.like == 1) {
+
+    sauce = {
+      likes: 1,
+      usersLiked: [req.body.userId],
+    };
+
+
+   } else if (req.body.like == -1) {
+
+    sauce = {
+      dislikes: 1,
+      usersDisliked: [req.body.userId],
+    };
+
+  } else {
+    sauce = {
+      likes: 0,
+      dislikes: 0,
+      // add logic here to remove users from usersLiked and usersDisliked arrays
+    }
+  }
+ 
+  
+
+    Sauce.updateOne({ _id: req.params.id }, sauce).then(
+      () => {
+        console.log(req.params.id)
+        res.status(201).json({
+          message: 'Likes/Dislikes Updated!'
+        });
+      }
+    ).catch(
+      (error) => {
+        res.status(400).json({
+          error: error
+        });
+      }
+    );
+  };
+
 
 
   exports.getAllSauces = (req, res, next) => {
