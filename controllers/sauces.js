@@ -1,4 +1,4 @@
-const { populate } = require('../models/sauce');
+
 const Sauce = require('../models/sauce')
 
 exports.createSauce = (req, res, next) => {
@@ -58,7 +58,7 @@ exports.getOneSauce = (req, res, next) => {
         name: req.body.sauce.name,
         manufacturer: req.body.sauce.manufacturer,
         description: req.body.sauce.description,
-        mainPepper: req.body.sauce.mainPepper,
+        mainPepper: req.body.sauce.mainPepper, 
         imageUrl: url + '/images/' + req.file.filename,
         heat: req.body.sauce.heat,
       };
@@ -87,50 +87,68 @@ exports.getOneSauce = (req, res, next) => {
     );
   };
 
+
   exports.likeOrDislike = (req, res, next) => {
-    let sauce = new Sauce({ _id: req.body.userId });
+    let id = req.params.id;
     
     if (req.body.like == 1) {
-
-    sauce = {
-      likes: 1,
-      usersLiked: [req.body.userId],
-    };
-
-
-   } else if (req.body.like == -1) {
-
-    sauce = {
-      dislikes: 1,
-      usersDisliked: [req.body.userId],
-    };
-
-  } else {
-    sauce = {
-      likes: 0,
-      dislikes: 0,
-      // add logic here to remove users from usersLiked and usersDisliked arrays
-    }
-  }
- 
-  
-
-    Sauce.updateOne({ _id: req.params.id }, sauce).then(
+    Sauce.findOneAndUpdate(
+      {_id: id}, 
+      {$push: {usersLiked: id}, likes: 1}).then(
       () => {
-        console.log(req.params.id)
-        res.status(201).json({
-          message: 'Likes/Dislikes Updated!'
-        });
-      }
-    ).catch(
-      (error) => {
-        res.status(400).json({
-          error: error
-        });
-      }
-    );
-  };
+              res.status(201).json({
+                message: 'Likes/Dislikes Updated!'
+              });
+            }
+      
+            ).catch(
+              (error) => {
+                res.status(400).json({
+                  error: error
+                });
+              }
+            );
 
+    } else if (req.body.like == -1) {
+      Sauce.findOneAndUpdate(
+        {_id: id}, 
+        {$push: {usersDisliked: id}, dislikes: 1}).then(
+        () => {
+                res.status(201).json({
+                  message: 'Likes/Dislikes Updated!'
+                });
+              }
+        
+              ).catch(
+                (error) => {
+                  res.status(400).json({
+                    error: error
+                  });
+                }
+              );
+
+    } else if (req.body.like == 0) {
+
+      Sauce.findOneAndUpdate(
+        {_id: id}, 
+        {$pull: {usersLiked: id, usersDisliked: id}, dislikes: 0, likes: 0}).then(
+        () => {
+          res.status(201).json({
+            message: 'No Likes or Dislikes'
+          });
+        }
+      ).catch(
+        (error) => {
+          res.status(400).json({
+            error: error
+          });
+        }
+      );
+
+
+  };
+ 
+  }
 
 
   exports.getAllSauces = (req, res, next) => {
