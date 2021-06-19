@@ -7,6 +7,8 @@ const sauceSchema = mongoose.Schema({
   description: { type: String, required: true },
   mainPepper: { type: String, required: true },
   imageUrl: { type: String, required: true },
+  s3KeyName: { type: String, required: true },
+  s3BucketName: { type: String, required: true },
   heat: { type: Number, required: true },
   likes: { type: Number, required: true },
   dislikes: { type: Number, required: true },

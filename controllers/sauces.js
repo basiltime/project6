@@ -1,8 +1,10 @@
-
 const Sauce = require('../models/sauce')
+const fs = require('fs');
+const aws = require('aws-sdk');
+const dotenv = require('dotenv').config({ path: './.env' });
 
 exports.createSauce = (req, res, next) => {
-    const url = req.protocol + '://' + req.get('host');
+ 
     req.body.sauce = JSON.parse(req.body.sauce);
     const sauce = new Sauce({
       userId: req.body.sauce.userId,
@@ -10,27 +12,36 @@ exports.createSauce = (req, res, next) => {
       manufacturer: req.body.sauce.manufacturer,
       description: req.body.sauce.description,
       mainPepper: req.body.sauce.mainPepper,
-      imageUrl: url + '/images/' + req.file.filename,
+      imageUrl: req.file.location,
+      s3KeyName: req.file.key,
+      s3BucketName: req.file.bucket,
       heat: req.body.sauce.heat,
       likes: 0,
       dislikes: 0,
       usersLiked: [],
       usersDisliked: [],
     });
-    sauce.save().then(
+
+
+    sauce.save()
+      .then(
       () => {
         res.status(201).json({
-          message: 'Post saved successfully!'
+          message: 'Sauce Saved!'
         });
-      }
+      } 
     ).catch(
       (error) => {
         res.status(400).json({
           error: error
         });
       }
+    
     );
-  }
+}
+
+
+  
 
 
 exports.getOneSauce = (req, res, next) => {
@@ -52,17 +63,16 @@ exports.getOneSauce = (req, res, next) => {
   exports.modifySauce = (req, res, next) => {
     let sauce = new Sauce({ _id: req.params._id });
     if (req.file) {
-      const url = req.protocol + '://' + req.get('host');
-      req.body.sauce = JSON.parse(req.body.sauce);
       sauce = {
         name: req.body.sauce.name,
         manufacturer: req.body.sauce.manufacturer,
         description: req.body.sauce.description,
         mainPepper: req.body.sauce.mainPepper, 
-        imageUrl: url + '/images/' + req.file.filename,
+        imageUrl: req.file.location,
         heat: req.body.sauce.heat,
       };
-      
+      // Add code here to delete the old image from S3
+      // Update the s3KeyName with the new S3 key.
     } else {
         sauce = {
           name: req.body.name,
@@ -75,7 +85,6 @@ exports.getOneSauce = (req, res, next) => {
     Sauce.updateOne({_id: req.params.id}, sauce).then(
       () => {
         res.status(201).json({
-          message: 'Sauce updated successfully!'
         });
       }
     ).catch(
@@ -94,10 +103,11 @@ exports.getOneSauce = (req, res, next) => {
     if (req.body.like == 1) {
     Sauce.findOneAndUpdate(
       {_id: id}, 
-      {$push: {usersLiked: id}, likes: 1}).then(
+      {$push: {usersLiked: id}, likes: 1}
+      ).then(
       () => {
               res.status(201).json({
-                message: 'Likes/Dislikes Updated!'
+                message: 'Sauce Liked by User'
               });
             }
       
@@ -115,7 +125,7 @@ exports.getOneSauce = (req, res, next) => {
         {$push: {usersDisliked: id}, dislikes: 1}).then(
         () => {
                 res.status(201).json({
-                  message: 'Likes/Dislikes Updated!'
+                  message: 'Sauce Disliked by User'
                 });
               }
         
@@ -166,18 +176,35 @@ exports.getOneSauce = (req, res, next) => {
     }
 
 
-exports.deleteSauce = (req, res, next) => {
-    Sauce.deleteOne({_id: req.params.id}).then(
-      () => {
-        res.status(200).json({
-          message: 'Deleted!'
+    exports.deleteSauce = (req, res, next) => {
+
+  
+
+      Sauce.findOne({_id: req.params.id}).then((sauce) => {
+        const s3 = new aws.S3({
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+          region: "us-east-2",
         });
-      }
-    ).catch(
-      (error) => {
-        res.status(400).json({
-          error: error
+        var params = {  Bucket: sauce.s3BucketName, Key: sauce.s3KeyName };
+
+        s3.deleteObject(params, function(err, data) {
+          if (err) console.log(err, err.stack);  // error
+          else     console.log();                 // deleted
         });
-      }
-    );
-  };
+        }
+      );
+
+      Sauce.deleteOne({_id: req.params.id}).then(
+        () => {
+          res.status(200).json({
+            message: 'Deleted!'
+          });
+        }
+      ).catch(
+        (error) => {
+          res.status(400).json({
+            error: error
+          });
+        })
+    };

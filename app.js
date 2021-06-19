@@ -4,9 +4,10 @@ const app = express();
 const mongoose = require('mongoose');
 const userRoutes = require('./routes/user');
 const saucesRoutes = require('./routes/sauces')
-const path = require('path');
 
-mongoose.connect('mongodb+srv://Krystal:Onion1989!@cluster0.ija7q.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
+
+
+mongoose.connect('mongodb+srv://HotTakesAppDBAccess:wDvJkYUX9FuID7wA@cluster0.ija7q.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
   .then(() => {
     console.log('Successfully connected to MongoDB Atlas!');
   })
@@ -26,8 +27,11 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json());
 
-app.use('/images', express.static(path.join(__dirname, 'images')))
+
+
+
 app.use('/api/auth', userRoutes);
 app.use('/api/sauces', saucesRoutes);
+
 
 module.exports = app;
