@@ -2,6 +2,14 @@ const Sauce = require('../models/sauce')
 const fs = require('fs');
 const aws = require('aws-sdk');
 const dotenv = require('dotenv').config({ path: './.env' });
+const s3 = new aws.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: "us-east-2",
+});
+
+
+
 
 exports.createSauce = (req, res, next) => {
  
@@ -61,8 +69,16 @@ exports.getOneSauce = (req, res, next) => {
   }
 
   exports.modifySauce = (req, res, next) => {
-    let sauce = new Sauce({ _id: req.params._id });
     if (req.file) {
+      Sauce.findOne({_id: req.params.id}).then((sauce) => {
+        const params = {  Bucket: sauce.s3BucketName, Key: sauce.s3KeyName };
+        s3.deleteObject(params, function(err, data) {
+          if (err) console.log(err, err.stack);  
+          else     console.log(data);                
+        });
+        }
+      );
+
       sauce = {
         name: req.body.sauce.name,
         manufacturer: req.body.sauce.manufacturer,
@@ -70,9 +86,9 @@ exports.getOneSauce = (req, res, next) => {
         mainPepper: req.body.sauce.mainPepper, 
         imageUrl: req.file.location,
         heat: req.body.sauce.heat,
+        s3KeyName: req.file.key,
       };
-      // Add code here to delete the old image from S3
-      // Update the s3KeyName with the new S3 key.
+
     } else {
         sauce = {
           name: req.body.name,
@@ -177,24 +193,16 @@ exports.getOneSauce = (req, res, next) => {
 
 
     exports.deleteSauce = (req, res, next) => {
-
-  
-
+      // Find the sauce in mongodb, then delete the image from S3
       Sauce.findOne({_id: req.params.id}).then((sauce) => {
-        const s3 = new aws.S3({
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-          region: "us-east-2",
-        });
-        var params = {  Bucket: sauce.s3BucketName, Key: sauce.s3KeyName };
-
+        const params = {  Bucket: sauce.s3BucketName, Key: sauce.s3KeyName };
         s3.deleteObject(params, function(err, data) {
-          if (err) console.log(err, err.stack);  // error
-          else     console.log();                 // deleted
+          if (err) console.log(err, err.stack);  
+          else     console.log(data);                
         });
         }
       );
-
+      // Delete sauce from mongodb
       Sauce.deleteOne({_id: req.params.id}).then(
         () => {
           res.status(200).json({
