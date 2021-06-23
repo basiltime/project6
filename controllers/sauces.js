@@ -1,5 +1,4 @@
 const Sauce = require('../models/sauce')
-const fs = require('fs');
 const aws = require('aws-sdk');
 const dotenv = require('dotenv').config({ path: './.env' });
 const s3 = new aws.S3({
@@ -12,7 +11,6 @@ const s3 = new aws.S3({
 
 
 exports.createSauce = (req, res, next) => {
- 
     req.body.sauce = JSON.parse(req.body.sauce);
     const sauce = new Sauce({
       userId: req.body.sauce.userId,
@@ -74,11 +72,12 @@ exports.getOneSauce = (req, res, next) => {
         const params = {  Bucket: sauce.s3BucketName, Key: sauce.s3KeyName };
         s3.deleteObject(params, function(err, data) {
           if (err) console.log(err, err.stack);  
-          else     console.log(data);                
+          else     console.log('Successfully replaced image!');                
         });
         }
       );
 
+      req.body.sauce = JSON.parse(req.body.sauce);
       sauce = {
         name: req.body.sauce.name,
         manufacturer: req.body.sauce.manufacturer,
@@ -100,6 +99,7 @@ exports.getOneSauce = (req, res, next) => {
    }
     Sauce.updateOne({_id: req.params.id}, sauce).then(
       () => {
+        console.log('Sauce Modified!');
         res.status(201).json({
         });
       }
