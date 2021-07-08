@@ -191,10 +191,10 @@ exports.getOneSauce = (req, res, next) => {
                 }
               );
             // If a dislike was canceled /////////////////////////////////////////////////
-            } else if (sauce.usersDisliked.includes(sauce.userId)) {
+            } else if (sauce.usersDisliked.includes(req.body.userId)) {
               Sauce.findOneAndUpdate(
                 {_id: id},
-                {$pull: {usersDisliked: sauce.userId}, $inc: {dislikes: -1}}
+                {$pull: {usersDisliked: req.body.userId}, $inc: {dislikes: -1}}
             ).then( 
               () => {
                 res.status(201).json({
